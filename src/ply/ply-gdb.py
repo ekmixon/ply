@@ -5,7 +5,7 @@ class FuncPrinter(object):
         self.val, self.ptr = val, ptr
 
     def to_string(self):
-        return self.ptr + "plyF(" + self.val["name"].string() + ")"
+        return f"{self.ptr}plyF(" + self.val["name"].string() + ")"
 
     def display_hint(self):
         return "func"
@@ -19,7 +19,7 @@ def nodeStr(n, stop=False):
         if not stop:
             arg = n["expr"]["args"]
             while arg != 0:
-                out += " " + nodeStr(arg, stop=True)
+                out += f" {nodeStr(arg, stop=True)}"
                 arg = arg["next"]
     elif str(n["ntype"]) == "N_STRING":
         out += "\"" + n["string"]["data"].string() + "\""
@@ -39,7 +39,7 @@ class NodePrinter(object):
         self.val, self.ptr = val, ptr
 
     def to_string(self):
-        return self.ptr + "plyN(" + nodeStr(self.val) + ")"
+        return f"{self.ptr}plyN({nodeStr(self.val)})"
 
     def display_hint(self):
         return "node"
@@ -49,12 +49,8 @@ class SymPrinter(object):
         self.val, self.ptr = val, ptr
 
     def to_string(self):
-        if self.val["name"]:
-            name = self.val["name"].string()
-        else:
-            name = "<anonymous>"
-
-        return self.ptr + "plyS(" + name + ")"
+        name = self.val["name"].string() if self.val["name"] else "<anonymous>"
+        return f"{self.ptr}plyS({name})"
 
     def display_hint(self):
         return "sym"
@@ -76,17 +72,14 @@ ttypeStrs = {
 def typeStr(t):
     ttype = str(t["ttype"])
 
-    if ttype in ttypeStrs:
-        return ttypeStrs[ttype](t)
-
-    return "???"
+    return ttypeStrs[ttype](t) if ttype in ttypeStrs else "???"
 
 class TypePrinter(object):
     def __init__(self, val, ptr):
         self.val, self.ptr = val, ptr
 
     def to_string(self):
-        return self.ptr + "plyT(" + typeStr(self.val) + ")"
+        return f"{self.ptr}plyT({typeStr(self.val)})"
 
     def display_hint(self):
         return "type"
@@ -111,9 +104,6 @@ def plyPrinterGet(v):
     if v.type.code != gdb.TYPE_CODE_STRUCT:
         return None
 
-    if v.type.tag in plyPrinters:
-        return plyPrinters[v.type.tag](v, ptr)
-
-    return None
+    return plyPrinters[v.type.tag](v, ptr) if v.type.tag in plyPrinters else None
 
 gdb.pretty_printers.append(plyPrinterGet)
